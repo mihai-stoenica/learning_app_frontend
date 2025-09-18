@@ -1,1 +1,1 @@
-npm run lintfix && npm run format
+npx lint-staged
