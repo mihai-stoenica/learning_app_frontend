@@ -15,10 +15,10 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "npm run lintfix",
-      "prettier --write"
+      "npm run format"
     ],
     "*.{json,css,md}": [
-      "prettier --write"
+      "npm run format"
     ]
   },
   "dependencies": {
