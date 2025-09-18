@@ -1,6 +1,6 @@
 import "./App.css";
 
 function App() {
-    const string abc;
+    const abc = "abc";
 }
 export default App;
