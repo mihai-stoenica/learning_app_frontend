@@ -25,7 +25,7 @@ const fetchData = async (
     return {
       isError: true,
       code: response.status,
-      message: (await response.json()).message,
+      message: (await response.json()).message || "Internal error",
     };
   }
 

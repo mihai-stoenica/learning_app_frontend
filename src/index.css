@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+#root {
+  height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.drawer-side {
+  top: 4rem; /* offset for navbar height */
+  height: calc(100vh - 4rem); /* reduce height so navbar isn't covered */
+  z-index: 20; /* drawer under navbar */
+}
