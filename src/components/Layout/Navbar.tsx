@@ -1,10 +1,14 @@
 import * as React from "react";
+import { logout } from "../../services/auth.ts";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 
 type NavbarProps = {
   toggleDrawer: () => void;
 };
 
 const Navbar: React.FC<NavbarProps> = ({ toggleDrawer }) => {
+  const { user, setUser } = useAuth();
+
   return (
     <>
       <div className="navbar bg-base-100 shadow-sm sticky top-0 left-0 right-0 z-30">
@@ -73,6 +77,16 @@ const Navbar: React.FC<NavbarProps> = ({ toggleDrawer }) => {
               <span className="badge badge-xs badge-primary indicator-item"></span>
             </div>
           </button>
+          {user ? (
+            <button
+              className="btn btn-ghost  p-2"
+              onClick={() => logout(setUser)}
+            >
+              Logout
+            </button>
+          ) : (
+            <></>
+          )}
         </div>
       </div>
     </>
