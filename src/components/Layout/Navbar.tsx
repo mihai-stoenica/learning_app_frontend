@@ -1,5 +1,4 @@
 import * as React from "react";
-import { logout } from "../../services/auth.ts";
 import { useAuth } from "../../contexts/AuthContext.tsx";
 
 type NavbarProps = {
@@ -7,7 +6,7 @@ type NavbarProps = {
 };
 
 const Navbar: React.FC<NavbarProps> = ({ toggleDrawer }) => {
-  const { user, setUser } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <>
@@ -91,11 +90,11 @@ const Navbar: React.FC<NavbarProps> = ({ toggleDrawer }) => {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                  <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                   <g
                     id="SVGRepo_tracerCarrier"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   ></g>
                   <g id="SVGRepo_iconCarrier">
                     {" "}
@@ -119,7 +118,7 @@ const Navbar: React.FC<NavbarProps> = ({ toggleDrawer }) => {
                 {user ? (
                   <button
                     className="btn-xs btn-ghost hover:bg-error"
-                    onClick={() => logout(setUser)}
+                    onClick={() => logout()}
                   >
                     Logout
                   </button>

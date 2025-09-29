@@ -11,11 +11,11 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div
       data-theme="light"
-      className="h-full w-full bg-base-300 flex flex-col "
+      className="overflow-y-scroll h-full w-full bg-base-300 flex flex-col "
     >
       <Navbar toggleDrawer={toggleDrawer} />
       <SideDrawer isOpened={drawerOpen}>
-        <main className="flex-1 overflow-auto h-full">{children}</main>
+        <main className="flex-1 h-full">{children}</main>
       </SideDrawer>
     </div>
   );

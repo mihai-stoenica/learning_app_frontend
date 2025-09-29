@@ -29,17 +29,16 @@ export const login = async (
     });
   } else {
     errorMessage = res.message;
-
     alert(errorMessage); //TODO add a toast for messages
   }
 };
 
-export const logout = (
+/*export const logout = (
   setUser: (user: { name: string; email: string } | null) => void,
 ) => {
   setUser(null);
   sessionStorage.removeItem("token");
-};
+};*/
 
 export const register = async (
   credentials: RegisterType,

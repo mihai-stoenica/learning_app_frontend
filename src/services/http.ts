@@ -1,3 +1,9 @@
+let onUnauthorized: (() => void) | null = null;
+
+export const setUnauthorizedHandler = (handler: () => void) => {
+  onUnauthorized = handler;
+};
+
 const fetchData = async (
   url: string,
   method: "POST" | "GET" | "PUT" | "PATCH" | "DELETE",
@@ -14,6 +20,10 @@ const fetchData = async (
         ? JSON.stringify(body)
         : undefined,
   });
+
+  if (response.status === 401 && onUnauthorized) {
+    onUnauthorized();
+  }
 
   if (response.status === 204) {
     return {

@@ -1,14 +1,24 @@
-import { createContext, useState, useContext } from "react";
+import {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
+import { setUnauthorizedHandler } from "../services/http";
 import type { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 type User = { name: string; email: string } | null;
 
 type AuthContextType = {
   user: User;
   setUser: (user: User) => void;
+  logout: () => void;
 };
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const navigate = useNavigate();
   const [user, setUserState] = useState<User>(() => {
     const name = sessionStorage.getItem("name");
     const email = sessionStorage.getItem("email");
@@ -32,8 +42,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUserState(user);
   };
 
+  const logout = useCallback(() => {
+    setUser(null);
+    sessionStorage.removeItem("token");
+    navigate("/login");
+  }, [navigate]);
+
+  useEffect(() => {
+    setUnauthorizedHandler(logout);
+  }, [logout]);
+
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser, logout }}>
       {children}
     </AuthContext.Provider>
   );
