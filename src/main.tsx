@@ -5,13 +5,16 @@ import App from "./App.tsx";
 import { AuthProvider } from "./contexts/AuthContext.tsx";
 import { BrowserRouter } from "react-router-dom";
 import Layout from "./pages/Layout.tsx";
+import { LoaderProvider } from "./contexts/LoaderContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <Layout>
-          <App />
+          <LoaderProvider>
+            <App />
+          </LoaderProvider>
         </Layout>
       </AuthProvider>
     </BrowserRouter>

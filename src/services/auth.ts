@@ -33,13 +33,6 @@ export const login = async (
   }
 };
 
-/*export const logout = (
-  setUser: (user: { name: string; email: string } | null) => void,
-) => {
-  setUser(null);
-  sessionStorage.removeItem("token");
-};*/
-
 export const register = async (
   credentials: RegisterType,
   navigate: ReturnType<typeof useNavigate>,

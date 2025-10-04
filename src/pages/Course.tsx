@@ -1,26 +1,24 @@
 import { useParams } from "react-router-dom";
-import { get } from "../services/http.ts";
+import { get, post } from "../services/http.ts";
 import { useCallback, useEffect, useState } from "react";
 import PostCard from "../components/Post/PostCard.tsx";
 import { Plus } from "lucide-react";
 import PostForm from "../components/Post/PostForm.tsx";
+import { useAuth } from "../contexts/AuthContext.tsx";
+import { useLoader } from "../contexts/LoaderContext.tsx";
+
+type UserType = {
+  id: number;
+  email: string;
+  name: string;
+};
 
 type CourseType = {
   id: number;
   name: string;
   description: string;
-  students: [
-    {
-      email: string;
-      name: string;
-    },
-  ];
-  teachers: [
-    {
-      email: string;
-      name: string;
-    },
-  ];
+  students: UserType[];
+  teachers: UserType[];
   access_code: string;
 };
 
@@ -28,18 +26,20 @@ type PostType = {
   id: number;
   title: string;
   text: string;
-  user: {
-    email: string;
-    name: string;
-  };
+  user: UserType;
   commentCount: number;
   type: "post" | "assignment";
   deadline?: string;
   max_score?: number;
+  isSubmitted?: boolean;
 };
 
 const Course = () => {
   const { id } = useParams();
+
+  const { user } = useAuth();
+  const { setLoading } = useLoader();
+
   const [activeTab, setActiveTab] = useState<"classwork" | "people">(
     "classwork",
   );
@@ -51,30 +51,58 @@ const Course = () => {
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const fetchCourse = useCallback(async () => {
-    const res = await get(`${API_URL}/course/${id}`);
+  const isTeacher = (): boolean => {
+    return (
+      course?.teachers.some((teacher) => teacher.email === user?.email) || false
+    );
+  };
 
-    if (!res.isError) {
-      setCourse(res.data);
-    } else {
-      setError(res.message);
-    }
+  const fetchCourse = useCallback(async () => {
+    return await get(`${API_URL}/course/${id}`);
   }, [API_URL, id]);
 
   const fetchPosts = useCallback(async () => {
-    const res = await get(`${API_URL}/post/course/${id}`);
-
-    if (!res.isError) {
-      setPosts(res.data);
-    } else {
-      if (!error) setError(res.message);
-    }
-  }, [API_URL, id, error]);
+    return await get(`${API_URL}/post/course/${id}`);
+  }, [API_URL, id]);
 
   const fetchAll = useCallback(async () => {
-    await fetchCourse();
-    await fetchPosts();
-  }, [fetchPosts, fetchCourse]);
+    setLoading(true);
+    try {
+      const courseResponse = await fetchCourse();
+      const postsResponse = await fetchPosts();
+
+      if (!courseResponse.isError) {
+        setCourse(courseResponse.data);
+      } else {
+        setError(courseResponse.message);
+      }
+
+      if (!postsResponse.isError) {
+        setPosts(postsResponse.data);
+      } else {
+        if (!error) setError(postsResponse.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchPosts, fetchCourse, error, setLoading]);
+
+  const makeTeacher = async (userId: number) => {
+    setLoading(true);
+    try {
+      const res = await post(`${API_URL}/course/make_teacher/${course?.id}`, {
+        user_id: userId,
+      });
+
+      if (!res.isError) {
+        await fetchAll();
+      } else {
+        alert(res.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchAll();
@@ -122,17 +150,19 @@ const Course = () => {
                   <Plus />
                   Add post
                 </button>
-                <button
-                  className="btn btn-outline"
-                  onClick={() => setNewAssignment(!newAssignment)}
-                >
-                  <Plus />
-                  Add assignment
-                </button>
+                {isTeacher() && (
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => setNewAssignment(!newAssignment)}
+                  >
+                    <Plus />
+                    Add assignment
+                  </button>
+                )}
               </div>
               {newPost && course?.id && (
                 <PostForm
-                  fetchPosts={fetchPosts}
+                  fetchPosts={/*fetchPosts*/ fetchAll}
                   courseId={course.id}
                   onClose={() => setNewPost(false)}
                   type={"post"}
@@ -140,24 +170,14 @@ const Course = () => {
               )}
               {newAssignment && course?.id && (
                 <PostForm
-                  fetchPosts={fetchPosts}
+                  fetchPosts={/*fetchPosts*/ fetchAll}
                   courseId={course.id}
                   onClose={() => setNewAssignment(false)}
                   type={"assignment"}
                 />
               )}
               {posts.map((post: PostType) => (
-                <PostCard
-                  key={post.id}
-                  id={post.id}
-                  title={post.title}
-                  text={post.text}
-                  commentCount={post.commentCount}
-                  name={post.user.name}
-                  deadline={post.deadline}
-                  max_score={post.max_score}
-                  type={post.type}
-                />
+                <PostCard key={post.id} post={post} fetchAll={fetchAll} />
               ))}
             </>
           ) : (
@@ -166,25 +186,31 @@ const Course = () => {
                 <h1 className="font-bold">Teachers</h1>
                 <hr />
                 <ul className="indent-4">
-                  {course?.teachers.map(
-                    (teacher: { email: string; name: string }) => (
-                      <li className="flex w-full mb-1 truncate">
-                        <span className="w-20">{teacher.name}</span>
-                        <div className="divider divider-horizontal"></div>
-                        <span>{teacher.email}</span>
-                      </li>
-                    ),
-                  )}
+                  {course?.teachers.map((teacher: UserType) => (
+                    <li className="flex w-full mb-1 truncate items-center">
+                      <span className="w-20">{teacher.name}</span>
+                      <div className="divider divider-horizontal"></div>
+                      <span>{teacher.email}</span>
+                    </li>
+                  ))}
                 </ul>
                 <h1 className="font-bold">Students</h1>
                 <hr />
                 <ul className="indent-4">
                   {course?.students.map(
-                    (student: { email: string; name: string }) => (
-                      <li className="flex w-full mb-1 truncate">
+                    (student: { id: number; email: string; name: string }) => (
+                      <li className="flex w-full mb-1 truncate items-center">
                         <span className="w-20">{student.name}</span>
                         <div className="divider divider-horizontal"></div>
                         <span>{student.email}</span>
+                        {isTeacher() && (
+                          <button
+                            className={"btn btn-sm ml-4 rounded-full"}
+                            onClick={() => makeTeacher(student.id)}
+                          >
+                            Make teacher
+                          </button>
+                        )}
                       </li>
                     ),
                   )}

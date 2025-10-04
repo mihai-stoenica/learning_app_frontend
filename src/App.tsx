@@ -4,6 +4,7 @@ import Login from "./pages/Auth/Login.tsx";
 import Register from "./pages/Auth/Register.tsx";
 import Home from "./pages/Home.tsx";
 import Course from "./pages/Course.tsx";
+import Todo from "./pages/Todo.tsx";
 function App() {
   return (
     <Routes>
@@ -11,6 +12,7 @@ function App() {
       <Route path="register" element={<Register />} />
       <Route path="" element={<Home />} />
       <Route path="course/:id" element={<Course />} />
+      <Route path="todo" element={<Todo />} />
     </Routes>
   );
 }

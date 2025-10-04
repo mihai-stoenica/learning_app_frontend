@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as React from "react";
 import { post } from "../../services/http.ts";
+import { useLoader } from "../../contexts/LoaderContext.tsx";
 
 type FormDataType = {
   title: string;
@@ -24,6 +25,8 @@ const PostForm: React.FC<PostFormProps> = ({
 }) => {
   const API_URL = import.meta.env.VITE_API_URL;
 
+  const { setLoading } = useLoader();
+
   const [formData, setFormData] = useState<FormDataType>({
     title: "",
     text: "",
@@ -35,12 +38,17 @@ const PostForm: React.FC<PostFormProps> = ({
       type === "post"
         ? `${API_URL}/post/new/course/${courseId}`
         : `${API_URL}/assignment/new/course/${courseId}`;
-    console.log(formData);
-    const res = await post(endpoint, formData);
 
-    if (!res.isError) {
-      await fetchPosts();
-      onClose();
+    setLoading(true);
+    try {
+      const res = await post(endpoint, formData);
+
+      if (!res.isError) {
+        await fetchPosts();
+        onClose();
+      }
+    } finally {
+      setLoading(false);
     }
   };
 

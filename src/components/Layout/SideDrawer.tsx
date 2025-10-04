@@ -27,10 +27,10 @@ const SideDrawer: React.FC<SideDrawerProps> = ({ isOpened, children }) => {
           <li>
             <a href="/?mine=true">My courses</a>
           </li>
-          <p className="font-bold">Sectiune</p>
+          <p className="font-bold">Activity</p>
           <hr />
           <li>
-            <a>Sidebar Item 2</a>
+            <a href="/todo">To do</a>
           </li>
         </ul>
       </div>

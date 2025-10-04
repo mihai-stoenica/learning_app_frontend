@@ -2,16 +2,19 @@ import { ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { get } from "../../services/http.ts";
 import { post as httpPost } from "../../services/http.ts";
+import * as React from "react";
+import { useLoader } from "../../contexts/LoaderContext.tsx";
 
 type PostType = {
   id: number;
   title: string;
   text: string;
-  name: string;
+  user: { name: string };
   commentCount: number;
   deadline?: string;
   max_score?: number;
   type: "post" | "assignment";
+  isSubmitted?: boolean;
 };
 
 type CommentType = {
@@ -20,11 +23,21 @@ type CommentType = {
   user: { name: string };
 };
 
-const PostCard = (post: PostType) => {
+type PostCardProps = {
+  post: PostType;
+  fetchAll: () => void;
+};
+
+const PostCard = ({ post, fetchAll }: PostCardProps) => {
   const API_URL = import.meta.env.VITE_API_URL;
+  const CLOUDINARY_NAME = import.meta.env.VITE_CLOUDINARY_NAME;
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [comments, setComments] = useState<CommentType[] | null>(null);
   const [newComment, setNewComment] = useState("");
+  const [file, setFile] = useState<File | null>();
+
+  const { setLoading } = useLoader();
 
   const fetchComments = async () => {
     const res = await get(`${API_URL}/comment/post/${post.id}`);
@@ -50,29 +63,93 @@ const PostCard = (post: PostType) => {
 
     const res = await httpPost(`${API_URL}/comment/new`, body);
     if (!res.isError) {
-      fetchComments();
+      await fetchComments();
     }
     setNewComment("");
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "assignment_files");
+    setLoading(true);
+    try {
+      const fileRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_NAME}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+
+      const data = await fileRes.json();
+
+      const res = await httpPost(
+        `${API_URL}/submission/new/assignment/${post.id}`,
+        {
+          answer: data.url,
+        },
+      );
+
+      if (res.isError) {
+        alert(res.message);
+      } else {
+        fetchAll();
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="card card-border bg-base-100 w-[90%] mt-3 mb-3">
       <div className="card-body items-left">
         <div className={"flex flex-row justify-between"}>
-          <h1 className="font-bold text-[1.1rem]">{post.title} </h1>
+          <h1 className="font-bold text-[1.1rem] w-32 truncate">
+            {post.title}{" "}
+          </h1>
           {post.type === "assignment" && (
             <>
-              <h1> Due: {post.deadline}</h1>
-              <h1>Max score: {post.max_score}</h1>
+              <h1 className={"w-40 truncate"}> Due: {post.deadline}</h1>
+              <h1 className={"w-40 truncate"}>Max score: {post.max_score}</h1>
             </>
           )}
 
-          <h1>
-            {post.name} {}
+          <h1 className={"w-20 truncate text-right"}>
+            {post.user.name} {}
           </h1>
         </div>
         <hr />
-        <p>{post.text}</p>
+        <div className={"flex flex-row justify-between"}>
+          <p>{post.text}</p>
+          {(post.type === "assignment" && !post.isSubmitted && (
+            <>
+              <form onSubmit={handleUpload}>
+                <input
+                  type="file"
+                  className="file-inputh h-8 max-w-52"
+                  onChange={handleFileChange}
+                />
+                <button className={"btn btn-outline btn-sm"} type={"submit"}>
+                  Submit
+                </button>
+              </form>
+            </>
+          )) ||
+            (post.isSubmitted && (
+              <p className={"text-right"}>You already submitted your work</p>
+            ))}
+        </div>
+
         <div className="collapse bg-base-100 ">
           <input
             type="checkbox"
