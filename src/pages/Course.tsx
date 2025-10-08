@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import PostForm from "../components/Post/PostForm.tsx";
 import { useAuth } from "../contexts/AuthContext.tsx";
 import { useLoader } from "../contexts/LoaderContext.tsx";
+import WorkCard from "../components/Post/WorkCard.tsx";
 
 type UserType = {
   id: number;
@@ -34,58 +35,86 @@ type PostType = {
   isSubmitted?: boolean;
 };
 
+type SubmissionType = {
+  id: number;
+  user: {
+    name: string;
+  };
+  assignment: {
+    id: number;
+    max_score: number;
+    title: string;
+    text: string;
+  };
+  answer: string;
+  score?: number;
+};
+
 const Course = () => {
   const { id } = useParams();
 
   const { user } = useAuth();
   const { setLoading } = useLoader();
 
-  const [activeTab, setActiveTab] = useState<"classwork" | "people">(
+  const [activeTab, setActiveTab] = useState<"classwork" | "people" | "work">(
     "classwork",
   );
   const [course, setCourse] = useState<CourseType>();
   const [posts, setPosts] = useState<PostType[]>([]);
+  const [work, setWork] = useState<SubmissionType[]>([]);
   const [newPost, setNewPost] = useState(false);
   const [newAssignment, setNewAssignment] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const isTeacher = (): boolean => {
+  const isTeacher = useCallback((): boolean => {
     return (
       course?.teachers.some((teacher) => teacher.email === user?.email) || false
     );
-  };
+  }, [course, user]);
 
   const fetchCourse = useCallback(async () => {
-    return await get(`${API_URL}/course/${id}`);
-  }, [API_URL, id]);
-
-  const fetchPosts = useCallback(async () => {
-    return await get(`${API_URL}/post/course/${id}`);
-  }, [API_URL, id]);
-
-  const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const courseResponse = await fetchCourse();
-      const postsResponse = await fetchPosts();
-
-      if (!courseResponse.isError) {
-        setCourse(courseResponse.data);
+      const response = await get(`${API_URL}/course/${id}`);
+      if (!response.isError) {
+        setCourse(response.data);
       } else {
-        setError(courseResponse.message);
-      }
-
-      if (!postsResponse.isError) {
-        setPosts(postsResponse.data);
-      } else {
-        if (!error) setError(postsResponse.message);
+        setError(response.message);
       }
     } finally {
       setLoading(false);
     }
-  }, [fetchPosts, fetchCourse, error, setLoading]);
+  }, [API_URL, id, setLoading]);
+
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await get(`${API_URL}/post/course/${id}`);
+      if (!response.isError) {
+        setPosts(response.data);
+      } else {
+        setError(response.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [API_URL, id, setLoading]);
+
+  const fetchWork = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await get(`${API_URL}/course/work/${id}`);
+      if (!response.isError) {
+        setWork(response.data);
+      } /*if(response.code !==  403)*/ else {
+        setError(response.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [API_URL, id, setLoading]);
 
   const makeTeacher = async (userId: number) => {
     setLoading(true);
@@ -95,7 +124,7 @@ const Course = () => {
       });
 
       if (!res.isError) {
-        await fetchAll();
+        await fetchCourse();
       } else {
         alert(res.message);
       }
@@ -105,8 +134,12 @@ const Course = () => {
   };
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchCourse();
+    fetchPosts();
+    if (activeTab === "work") {
+      fetchWork();
+    }
+  }, [fetchCourse, fetchPosts, fetchWork, activeTab]);
 
   return (
     <>
@@ -130,8 +163,18 @@ const Course = () => {
               aria-label="People"
               onChange={() => setActiveTab("people")}
             />
+            {isTeacher() && (
+              <input
+                type="radio"
+                value={3}
+                name="tabs"
+                className="tab"
+                aria-label="Work"
+                onChange={() => setActiveTab("work")}
+              />
+            )}
           </div>
-          {activeTab === "classwork" ? (
+          {activeTab === "classwork" && (
             <>
               <div className="card card-border bg-base-100 w-[90%] mb-3">
                 <div className="card-body items-center">
@@ -162,7 +205,7 @@ const Course = () => {
               </div>
               {newPost && course?.id && (
                 <PostForm
-                  fetchPosts={/*fetchPosts*/ fetchAll}
+                  fetchPosts={fetchPosts}
                   courseId={course.id}
                   onClose={() => setNewPost(false)}
                   type={"post"}
@@ -170,17 +213,24 @@ const Course = () => {
               )}
               {newAssignment && course?.id && (
                 <PostForm
-                  fetchPosts={/*fetchPosts*/ fetchAll}
+                  fetchPosts={fetchPosts}
                   courseId={course.id}
                   onClose={() => setNewAssignment(false)}
                   type={"assignment"}
                 />
               )}
               {posts.map((post: PostType) => (
-                <PostCard key={post.id} post={post} fetchAll={fetchAll} />
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  fetchAll={fetchPosts}
+                  canSubmit={() => !isTeacher()}
+                />
               ))}
             </>
-          ) : (
+          )}
+
+          {activeTab === "people" && (
             <div className="card card-border bg-base-100 w-[80%] max-h-[70vh]">
               <div className="card-body items-left">
                 <h1 className="font-bold">Teachers</h1>
@@ -218,6 +268,11 @@ const Course = () => {
               </div>
             </div>
           )}
+          {activeTab === "work" &&
+            isTeacher() &&
+            work.map((item) => (
+              <WorkCard key={item.id} submission={item} onSubmit={fetchWork} />
+            ))}
         </div>
       )}
       {error && <p>{error}</p>}

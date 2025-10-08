@@ -22,6 +22,8 @@ type RegisterForm = {
 type FormType = LoginForm | RegisterForm;
 
 function AuthForm({ mode }: AuthFormProps) {
+  const [error, setError] = useState("");
+
   const { setUser } = useAuth();
   const navigate = useNavigate();
 
@@ -35,9 +37,13 @@ function AuthForm({ mode }: AuthFormProps) {
     e.preventDefault();
 
     if (mode === "login") {
-      await login(formData, setUser);
+      const errorMessage = await login(formData, setUser);
+
+      if (errorMessage) setError(errorMessage);
     } else if (mode === "register") {
-      await register(formData as RegisterForm, navigate);
+      const errorMessage = await register(formData as RegisterForm, navigate);
+
+      if (errorMessage) setError(errorMessage);
     }
   };
 
@@ -99,6 +105,7 @@ function AuthForm({ mode }: AuthFormProps) {
               })
             }
           />
+          {error.length > 0 && <p className={"text-error"}>{error}</p>}
 
           <div className="flex flex-row items-center mt-4 justify-between gap-4">
             {mode === "register" ? (

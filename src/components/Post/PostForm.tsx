@@ -2,6 +2,7 @@ import { useState } from "react";
 import * as React from "react";
 import { post } from "../../services/http.ts";
 import { useLoader } from "../../contexts/LoaderContext.tsx";
+import { useToast } from "../../contexts/ToastContext.tsx";
 
 type FormDataType = {
   title: string;
@@ -26,6 +27,7 @@ const PostForm: React.FC<PostFormProps> = ({
   const API_URL = import.meta.env.VITE_API_URL;
 
   const { setLoading } = useLoader();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState<FormDataType>({
     title: "",
@@ -46,6 +48,8 @@ const PostForm: React.FC<PostFormProps> = ({
       if (!res.isError) {
         await fetchPosts();
         onClose();
+      } else {
+        showToast(res.message, "error");
       }
     } finally {
       setLoading(false);

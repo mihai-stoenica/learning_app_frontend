@@ -4,6 +4,7 @@ import { get } from "../../services/http.ts";
 import { post as httpPost } from "../../services/http.ts";
 import * as React from "react";
 import { useLoader } from "../../contexts/LoaderContext.tsx";
+import { useToast } from "../../contexts/ToastContext.tsx";
 
 type PostType = {
   id: number;
@@ -26,9 +27,11 @@ type CommentType = {
 type PostCardProps = {
   post: PostType;
   fetchAll: () => void;
+  canSubmit: () => boolean;
 };
 
-const PostCard = ({ post, fetchAll }: PostCardProps) => {
+const PostCard = ({ post, fetchAll, canSubmit }: PostCardProps) => {
+  const { showToast } = useToast();
   const API_URL = import.meta.env.VITE_API_URL;
   const CLOUDINARY_NAME = import.meta.env.VITE_CLOUDINARY_NAME;
 
@@ -43,7 +46,7 @@ const PostCard = ({ post, fetchAll }: PostCardProps) => {
     const res = await get(`${API_URL}/comment/post/${post.id}`);
     if (!res.isError) setComments(res.data);
     else if (res.code !== 401) {
-      alert(res.message);
+      showToast(res.message, "error");
     }
   };
   const toggleExpand = async (checked: boolean) => {
@@ -81,6 +84,7 @@ const PostCard = ({ post, fetchAll }: PostCardProps) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "assignment_files");
+    /*formData.append("public_id", `${file.name}`);*/
     setLoading(true);
     try {
       const fileRes = await fetch(
@@ -101,7 +105,7 @@ const PostCard = ({ post, fetchAll }: PostCardProps) => {
       );
 
       if (res.isError) {
-        alert(res.message);
+        showToast(res.message, "error");
       } else {
         fetchAll();
       }
@@ -131,7 +135,7 @@ const PostCard = ({ post, fetchAll }: PostCardProps) => {
         <hr />
         <div className={"flex flex-row justify-between"}>
           <p>{post.text}</p>
-          {(post.type === "assignment" && !post.isSubmitted && (
+          {(post.type === "assignment" && !post.isSubmitted && canSubmit() && (
             <>
               <form onSubmit={handleUpload}>
                 <input

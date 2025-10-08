@@ -6,6 +6,7 @@ import { AuthProvider } from "./contexts/AuthContext.tsx";
 import { BrowserRouter } from "react-router-dom";
 import Layout from "./pages/Layout.tsx";
 import { LoaderProvider } from "./contexts/LoaderContext.tsx";
+import { ToastProvider } from "./contexts/ToastContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -13,7 +14,9 @@ createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <Layout>
           <LoaderProvider>
-            <App />
+            <ToastProvider>
+              <App />
+            </ToastProvider>
           </LoaderProvider>
         </Layout>
       </AuthProvider>

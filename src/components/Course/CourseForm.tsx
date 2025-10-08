@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { post } from "../../services/http.ts";
+import { useToast } from "../../contexts/ToastContext.tsx";
 
 type CourseForm = {
   name: string;
@@ -11,6 +12,7 @@ type CourseProps = {
 };
 
 const CourseForm = ({ onSaveCourse }: CourseProps) => {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState<CourseForm>({
     name: "",
     description: "",
@@ -20,14 +22,14 @@ const CourseForm = ({ onSaveCourse }: CourseProps) => {
     const res = await post(`${API_URL}/course/new`, formData);
 
     if (!res.isError) {
-      alert("Course created");
+      showToast("Course created", "success");
       await onSaveCourse();
       setFormData({
         name: "",
         description: "",
       });
     } else {
-      alert(res.message);
+      showToast(res.message, "error");
     }
   };
 

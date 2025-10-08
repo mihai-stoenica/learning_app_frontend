@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { post } from "../../services/http.ts";
+import { useToast } from "../../contexts/ToastContext.tsx";
 
 type CourseForm = {
   access_code: string;
@@ -10,6 +11,8 @@ type CourseProps = {
 };
 
 const CourseForm = ({ onJoinCourse }: CourseProps) => {
+  const { showToast } = useToast();
+
   const [formData, setFormData] = useState<CourseForm>({
     access_code: "",
   });
@@ -20,7 +23,7 @@ const CourseForm = ({ onJoinCourse }: CourseProps) => {
     if (!res.isError) {
       await onJoinCourse();
     } else {
-      alert(res.message);
+      showToast(res.message, "error");
     }
     setFormData({
       access_code: "",

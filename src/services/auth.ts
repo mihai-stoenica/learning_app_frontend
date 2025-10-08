@@ -18,7 +18,7 @@ export const login = async (
 ) => {
   const res = await post(`${API_URL}/login_check`, credentials);
 
-  let data, errorMessage;
+  let data /*, errorMessage*/;
 
   if (!res.isError) {
     data = res.data;
@@ -27,9 +27,9 @@ export const login = async (
       name: data.name,
       email: data.email,
     });
+    return 0;
   } else {
-    errorMessage = res.message;
-    alert(errorMessage); //TODO add a toast for messages
+    return res.message;
   }
 };
 
@@ -39,12 +39,12 @@ export const register = async (
 ) => {
   const res = await post(`${API_URL}/register`, credentials);
 
-  let errorMessage;
+  /*let errorMessage;*/
 
   if (!res.isError) {
     navigate("/login");
+    return 0;
   } else {
-    errorMessage = res.message;
-    alert(errorMessage); //TODO add a toast for messages
+    return res.message;
   }
 };
