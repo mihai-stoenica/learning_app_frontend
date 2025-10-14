@@ -11,6 +11,7 @@ const fetchData = async (
 ) => {
   const response = await fetch(url, {
     method,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${sessionStorage.getItem("token") || ""}`,

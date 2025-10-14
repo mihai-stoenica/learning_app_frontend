@@ -5,6 +5,7 @@ import Register from "./pages/Auth/Register.tsx";
 import Home from "./pages/Home.tsx";
 import Course from "./pages/Course.tsx";
 import Todo from "./pages/Todo.tsx";
+import ChatBox from "./components/Course/ChatBox.tsx";
 function App() {
   return (
     <>
@@ -14,6 +15,7 @@ function App() {
         <Route path="" element={<Home />} />
         <Route path="course/:id" element={<Course />} />
         <Route path="todo" element={<Todo />} />
+        <Route path="chat" element={<ChatBox courseId={1} />} />
       </Routes>
     </>
   );

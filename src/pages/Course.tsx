@@ -7,6 +7,7 @@ import PostForm from "../components/Post/PostForm.tsx";
 import { useAuth } from "../contexts/AuthContext.tsx";
 import { useLoader } from "../contexts/LoaderContext.tsx";
 import WorkCard from "../components/Post/WorkCard.tsx";
+import ChatBox from "../components/Course/ChatBox.tsx";
 
 type UserType = {
   id: number;
@@ -56,9 +57,9 @@ const Course = () => {
   const { user } = useAuth();
   const { setLoading } = useLoader();
 
-  const [activeTab, setActiveTab] = useState<"classwork" | "people" | "work">(
-    "classwork",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "classwork" | "people" | "work" | "chat"
+  >("classwork");
   const [course, setCourse] = useState<CourseType>();
   const [posts, setPosts] = useState<PostType[]>([]);
   const [work, setWork] = useState<SubmissionType[]>([]);
@@ -163,6 +164,14 @@ const Course = () => {
               aria-label="People"
               onChange={() => setActiveTab("people")}
             />
+            <input
+              type="radio"
+              value={4}
+              name="tabs"
+              className="tab"
+              aria-label="Chat"
+              onChange={() => setActiveTab("chat")}
+            />
             {isTeacher() && (
               <input
                 type="radio"
@@ -174,6 +183,9 @@ const Course = () => {
               />
             )}
           </div>
+          {activeTab === "chat" && course?.id && (
+            <ChatBox courseId={course?.id} />
+          )}
           {activeTab === "classwork" && (
             <>
               <div className="card card-border bg-base-100 w-[90%] mb-3">

@@ -1,5 +1,6 @@
 import { post } from "./http.ts";
 import { useNavigate } from "react-router-dom";
+
 type LoginType = {
   email: string;
   password: string;
@@ -18,7 +19,7 @@ export const login = async (
 ) => {
   const res = await post(`${API_URL}/login_check`, credentials);
 
-  let data /*, errorMessage*/;
+  let data;
 
   if (!res.isError) {
     data = res.data;
@@ -27,6 +28,7 @@ export const login = async (
       name: data.name,
       email: data.email,
     });
+
     return 0;
   } else {
     return res.message;
@@ -38,8 +40,6 @@ export const register = async (
   navigate: ReturnType<typeof useNavigate>,
 ) => {
   const res = await post(`${API_URL}/register`, credentials);
-
-  /*let errorMessage;*/
 
   if (!res.isError) {
     navigate("/login");
