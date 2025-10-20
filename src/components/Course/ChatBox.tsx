@@ -5,6 +5,7 @@ import { useLoader } from "../../contexts/LoaderContext.tsx";
 import * as React from "react";
 import { useToast } from "../../contexts/ToastContext.tsx";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { Send } from "lucide-react";
 
 type MessageType = {
   id: number;
@@ -184,8 +185,8 @@ const ChatBox = ({ courseId }: ChatBoxProps) => {
           ))}
         </InfiniteScroll>
       </div>
-      <div className="w-[70%] bg-base-100 shadow-sm mt-2">
-        <form onSubmit={sendMessage}>
+      <div className=" w-[70%]  shadow-sm mt-2">
+        <form onSubmit={sendMessage} className={"w-full flex flex-row gap-1"}>
           <input
             type="text"
             placeholder="Type here"
@@ -194,6 +195,9 @@ const ChatBox = ({ courseId }: ChatBoxProps) => {
             required={true}
             onChange={(e) => setMessage(e.target.value)}
           />
+          <button className="btn btn-neutral border-0" type={"submit"}>
+            <Send />
+          </button>
         </form>
       </div>
     </div>
