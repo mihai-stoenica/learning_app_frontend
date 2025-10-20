@@ -1,0 +1,50 @@
+import { post } from "./http.ts";
+import { useNavigate } from "react-router-dom";
+
+type LoginType = {
+  email: string;
+  password: string;
+};
+
+type RegisterType = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+const API_URL = import.meta.env.VITE_API_URL;
+export const login = async (
+  credentials: LoginType,
+  setUser: (user: { name: string; email: string }) => void,
+) => {
+  const res = await post(`${API_URL}/login_check`, credentials);
+
+  let data;
+
+  if (!res.isError) {
+    data = res.data;
+    sessionStorage.setItem("token", data.token);
+    setUser({
+      name: data.name,
+      email: data.email,
+    });
+
+    return 0;
+  } else {
+    return res.message;
+  }
+};
+
+export const register = async (
+  credentials: RegisterType,
+  navigate: ReturnType<typeof useNavigate>,
+) => {
+  const res = await post(`${API_URL}/register`, credentials);
+
+  if (!res.isError) {
+    navigate("/login");
+    return 0;
+  } else {
+    return res.message;
+  }
+};

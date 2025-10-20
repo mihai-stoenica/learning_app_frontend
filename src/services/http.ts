@@ -1,3 +1,9 @@
+let onUnauthorized: (() => void) | null = null;
+
+export const setUnauthorizedHandler = (handler: () => void) => {
+  onUnauthorized = handler;
+};
+
 const fetchData = async (
   url: string,
   method: "POST" | "GET" | "PUT" | "PATCH" | "DELETE",
@@ -5,6 +11,7 @@ const fetchData = async (
 ) => {
   const response = await fetch(url, {
     method,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${sessionStorage.getItem("token") || ""}`,
@@ -14,6 +21,10 @@ const fetchData = async (
         ? JSON.stringify(body)
         : undefined,
   });
+
+  if (response.status === 401 && onUnauthorized) {
+    onUnauthorized();
+  }
 
   if (response.status === 204) {
     return {
@@ -25,7 +36,7 @@ const fetchData = async (
     return {
       isError: true,
       code: response.status,
-      message: (await response.json()).message,
+      message: (await response.json()).message || "Internal error",
     };
   }
 
